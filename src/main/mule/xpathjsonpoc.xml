@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="496b0903-a84b-4a6c-afd2-f5863550482f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<configuration doc:name="Configuration" doc:id="be63b770-014c-491e-983b-10f773f38635" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="3ff2f961-c9ed-4256-b885-6a47f73af0a3" >
+		<file:connection workingDir="C:\Users\bavelive\Downloads\ResourceFolder" />
+	</file:config>
+	<flow name="xpathjsonpocFlow" doc:id="cc5ad6ef-f54a-409e-ab8b-f954cbfb84f8" >
+		<http:listener doc:name="Listener" doc:id="0eb15517-b4ab-4d46-83c4-142a7b5346f2" config-ref="HTTP_Listener_config" path="/"/>
+		<ee:transform doc:name="Transform Message" doc:id="8b570d49-69fa-4f0b-a5cf-e79092761603">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ "ToDayDate" : (now() as Date) }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:list doc:name="List" doc:id="bc1e1a66-19d6-4047-b464-ced43645cc06" config-ref="File_Config" directoryPath="C:\Users\bavelive\Downloads\ResourceFolder" recursive="true">
+			<file:matcher filenamePattern="#['*'++ payload.ToDayDate ++'.csv']"/>
+		</file:list>
+		<foreach doc:name="For Each" doc:id="4b6abef9-dfb9-40e9-aa19-b3bc65f8ea1d" >
+			<file:write doc:name="Write" doc:id="1395a662-2c58-482b-918e-9a801760a941" config-ref="File_Config" path="basava.csv" mode="APPEND"/>
+		</foreach>
+	</flow>
+	<flow name="xpathjsonpocFlow1" doc:id="3468a48f-5b4e-4c95-a911-92b32af9926f" >
+		<http:listener doc:name="Listener" doc:id="f60bca3b-32a9-4649-a9ad-9a6106ffbdef" config-ref="HTTP_Listener_config" path="/date"/>
+		<ee:transform doc:name="Transform Message" doc:id="13e6a63a-de9c-429b-8168-be9a78f24424" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ "ToDayDate" : (now()-|P30D| )}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="22d06c98-7d19-4e6e-b89f-9ac064e97c57" />
+	</flow>
+	
+</mule>
